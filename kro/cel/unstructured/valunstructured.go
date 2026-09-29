@@ -20,6 +20,7 @@ limitations under the License.
 package unstructured
 
 import (
+	"encoding/base64"
 	"fmt"
 	"reflect"
 	"sync"
@@ -143,12 +144,11 @@ func UnstructuredToVal(unstructured interface{}, schema common.Schema) ref.Val {
 			}
 			return types.Timestamp{Time: time.Time(d)}
 		case "byte":
-			base64 := strfmt.Base64{}
-			err := base64.UnmarshalText([]byte(str))
+			b, err := decodeBase64(str)
 			if err != nil {
-				return types.NewErr("Invalid byte formatted string %s: %v", str, err)
+				return types.NewErr("Invalid byte formatted string: %v", err)
 			}
-			return types.Bytes(base64)
+			return types.Bytes(b)
 		}
 
 		return types.String(str)
@@ -742,4 +742,12 @@ func (t *unstructuredMap) Find(key ref.Val) (ref.Val, bool) {
 	}
 
 	return nil, false
+}
+
+func decodeBase64(s string) ([]byte, error) {
+	b, err := base64.StdEncoding.DecodeString(s)
+	if err == nil {
+		return b, nil
+	}
+	return base64.URLEncoding.DecodeString(s)
 }

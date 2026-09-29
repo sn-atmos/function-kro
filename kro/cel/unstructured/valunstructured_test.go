@@ -194,6 +194,23 @@ func TestUnstructuredToVal_StringBytes(t *testing.T) {
 	assert.Equal(t, []byte("hello"), []byte(b))
 }
 
+func TestUnstructuredToVal_StringBytesStandardEncoding(t *testing.T) {
+	want := []byte{0xfb, 0xff, 0xbf}
+	for name, input := range map[string]string{"standard": "+/+/", "url": "-_-_"} {
+		t.Run(name, func(t *testing.T) {
+			val := UnstructuredToVal(input, schemaWithFormat("string", "byte"))
+			b, ok := val.(types.Bytes)
+			require.True(t, ok, "expected Bytes, got %T: %v", val, val)
+			assert.Equal(t, want, []byte(b))
+		})
+	}
+}
+
+func TestUnstructuredToVal_StringBytesInvalid(t *testing.T) {
+	val := UnstructuredToVal("not base64!", schemaWithFormat("string", "byte"))
+	assert.True(t, types.IsError(val), "expected error, got %T", val)
+}
+
 func TestUnstructuredToVal_Integer(t *testing.T) {
 	tests := []struct {
 		name  string
