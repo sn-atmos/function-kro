@@ -137,7 +137,7 @@ func (f *Function) RunFunction(_ context.Context, req *fnv1.RunFunctionRequest) 
 			response.Fatal(rsp, errors.Wrapf(err, "cannot get external resource %q", r.ID))
 			return rsp, nil
 		}
-		if !ok || len(resources) == 0 {
+		if !ok || (len(resources) == 0 && !isExternalCollection(nodesByID[r.ID])) {
 			f.log.Debug("External resource not available yet", "id", r.ID)
 			continue
 		}
@@ -740,4 +740,8 @@ func structToSpecSchema(s *structpb.Struct) (*spec.Schema, error) {
 	}
 
 	return schema, nil
+}
+
+func isExternalCollection(n *runtime.Node) bool {
+	return n != nil && n.Spec.Meta.Type == graph.NodeTypeExternalCollection
 }
